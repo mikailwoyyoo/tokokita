@@ -9,12 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         verifyCsrfToken($_POST['csrf_token'] ?? null);
         $name = trim((string) ($_POST['name'] ?? ''));
         $city = trim((string) ($_POST['city'] ?? ''));
-        if (preg_match('/^.{1,100}$/us', $name) !== 1 || preg_match('/^.{1,50}$/us', $city) !== 1) {
-            throw new InvalidArgumentException('Nama pelanggan (maks. 100 karakter) dan kota (maks. 50 karakter) wajib diisi.');
+        if (preg_match('/^.{1,100}$/us', $name) !== 1 || preg_match('/^.{0,50}$/us', $city) !== 1) {
+            throw new InvalidArgumentException('Nama pelanggan wajib diisi (maks. 100 karakter); kota opsional (maks. 50 karakter).');
         }
 
         $statement = $pdo->prepare('CALL TambahPelanggan(?, ?)');
-        $statement->execute([$name, $city]);
+        $statement->execute([$name, $city !== '' ? $city : null]);
         $statement->closeCursor();
         setFlash('success', 'Pelanggan berhasil ditambahkan.');
     } catch (InvalidArgumentException $exception) {
@@ -62,7 +62,7 @@ require __DIR__ . '/includes/header.php';
         <form method="post" class="form-grid">
             <input type="hidden" name="csrf_token" value="<?= h(csrfToken()) ?>">
             <div class="field"><label for="customer-name">Nama pelanggan</label><input id="customer-name" name="name" maxlength="100" required></div>
-            <div class="field"><label for="customer-city">Kota</label><input id="customer-city" name="city" maxlength="50" required></div>
+            <div class="field"><label for="customer-city">Kota <span class="field-optional">(opsional)</span></label><input id="customer-city" name="city" maxlength="50" autocomplete="address-level2"></div>
             <div class="field full"><button class="button button-primary" type="submit">Simpan Pelanggan</button></div>
         </form>
     </div>
